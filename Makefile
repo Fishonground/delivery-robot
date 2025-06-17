@@ -1,80 +1,70 @@
-PATH_PREFIX=~
+PATH_PREFIX := $(CURDIR)
 
-create-topics:
-  	docker exec broker \
-  kafka-topics --create --if-not-exists \
-    --topic monitor \
-    --bootstrap-server localhost:9092 \
-    --replication-factor 1 \
-    --partitions 1
-	docker exec broker \
-  kafka-topics --create --if-not-exists \
-    --topic central \
-    --bootstrap-server localhost:9092 \
-    --replication-factor 1 \
-    --partitions 1
-	docker exec broker \
-  kafka-topics --create --if-not-exists \
-    --topic communication \
-    --bootstrap-server localhost:9092 \
-    --replication-factor 1 \
-    --partitions 1
-	docker exec broker \
-  kafka-topics --create --if-not-exists \
-    --topic hmi \
-    --bootstrap-server localhost:9092 \
-    --replication-factor 1 \
-    --partitions 1
-	docker exec broker \
-  kafka-topics --create --if-not-exists \
-    --topic motion \
-    --bootstrap-server localhost:9092 \
-    --replication-factor 1 \
-    --partitions 1
-	docker exec broker \
-  kafka-topics --create --if-not-exists \
-    --topic positioning \
-    --bootstrap-server localhost:9092 \
-    --replication-factor 1 \
-    --partitions 1
-	docker exec broker \
-  kafka-topics --create --if-not-exists \
-    --topic sensors \
-    --bootstrap-server localhost:9092 \
-    --replication-factor 1 \
-    --partitions 1
+MODULES := monitor \
+           communication \
+		   crypto \
+		   central \
+		   complex \
+		   gnss \
+		   internal \
+		   hmi \
+		   motion \
+		   positioning \
+		   sensors \
 
+SLEEP_TIME := 20
 
+run:
+	docker-compose up -d
+	sleep ${SLEEP_TIME}
+
+	for MODULE in ${MODULES}; do \
+		echo Creating $${MODULE} topic; \
+		docker exec broker \
+			kafka-topics --create --if-not-exists \
+			--topic $${MODULE} \
+			--bootstrap-server localhost:9092 \
+			--replication-factor 1 \
+			--partitions 1; \
+	done
+
+all: clean build run-broker delay30s run delay60s test
+
+delay30s:
+	sleep 30
+
+delay60s:
+	sleep 60
 
 sys-packages:
-	# sudo apt install -y docker-compose
-	sudo apt install python3-pip -y
-	sudo pip install pipenv
+	#sudo apt install -y docker-compose
+	#sudo apt install python3-pip -y
+	#sudo pip install pipenv
 
 broker:
 	docker-compose -f kafka/docker-compose.yaml up -d
 
 permissions:
-	chmod u+x $(PATH_PREFIX)/delivery-robot/monitor/monitor.py
-	chmod u+x $(PATH_PREFIX)/delivery-robot/central/central.py
-	chmod u+x $(PATH_PREFIX)/delivery-robot/communication/communication.py
-	chmod u+x $(PATH_PREFIX)/delivery-robot/fleet/server.py
-	chmod u+x $(PATH_PREFIX)/delivery-robot/hmi/hmi.py
-	chmod u+x $(PATH_PREFIX)/delivery-robot/motion/motion.py
-	chmod u+x $(PATH_PREFIX)/delivery-robot/positioning/positioning.py
-	chmod u+x $(PATH_PREFIX)/delivery-robot/sensors/sensors.py
+	chmod u+x $(PATH_PREFIX)/monitor/monitor.py
+	chmod u+x $(PATH_PREFIX)/central/central.py
+	chmod u+x $(PATH_PREFIX)/communication/communication.py
+	chmod u+x $(PATH_PREFIX)/fleet/server.py
+	chmod u+x $(PATH_PREFIX)/hmi/hmi.py
+	chmod u+x $(PATH_PREFIX)/motion/motion.py
+	chmod u+x $(PATH_PREFIX)/positioning/positioning.py
+	chmod u+x $(PATH_PREFIX)/sensors/sensors.py
+	chmod u+x $(PATH_PREFIX)/crypto/crypto.py
+	chmod u+x $(PATH_PREFIX)/complex/complex.py
+	chmod u+x $(PATH_PREFIX)/internal/internal.py
+	chmod u+x $(PATH_PREFIX)/gnss/gnss.py
 
 pipenv:
 	pipenv install -r requirements.txt
 
 prepare: sys-packages permissions pipenv build run-broker
 
-prepare-screen:
-	# WSL specific preparation
-	sudo /etc/init.d/screen-cleanup start
-
-
-run-screen: broker run-central-screen run-communication-screen run-fleet-screen run-hmi-screen run-motion-screen run-sensors-screen run-positioning-screen
+logs:
+	docker-compose logs -f --tail 100
 
 build:
 	docker-compose build
@@ -82,66 +72,14 @@ build:
 run-broker:
 	docker-compose up -d zookeeper broker
 
-run:
-	docker-compose up -d
+clean:
+	docker-compose down; pipenv --rm; rm -f Pipfile*; echo cleanup complete
 
-restart:
-	docker-compose restart
+check_broker:
+	# message broker needs to be reachable by name su-broker - it is expected so in tests
+	ping -c 1 su-broker; if [ $$? -eq 0 ]; then echo "broker check ok" ; else \
+	echo "adding su-broker to your /etc/hosts"; sudo bash -c "echo '127.0.0.1       su-broker' >> /etc/hosts" ; \
+	fi
 
-stop-app:
-	pkill flask
-
-restart-app: stop-app run
-
-
-run-monitor-screen:
-	screen -dmS monitor bash -c "cd $(PATH_PREFIX)/delivery-robot/; pipenv run ./monitor/monitor.py config.ini"
-
-run-monitor:
-	cd $(PATH_PREFIX)/delivery-robot/; pipenv run ./monitor/monitor.py config.ini
-
-
-run-positioning:
-	cd $(PATH_PREFIX)/delivery-robot/; pipenv run positioning/positioning.py config.ini
-
-run-positioning-screen:
-	screen -dmS positioning bash -c "cd $(PATH_PREFIX)/delivery-robot/; pipenv run positioning/positioning.py config.ini"
-
-run-central:
-	cd $(PATH_PREFIX)/delivery-robot/; pipenv run central/central.py config.ini
-
-run-central-screen:
-	screen -dmS central bash -c "cd $(PATH_PREFIX)/delivery-robot/; pipenv run central/central.py config.ini"
-
-run-communication:
-	cd $(PATH_PREFIX)/delivery-robot/; pipenv run communication/communication.py config.ini
-
-run-communication-screen:
-	screen -dmS central bash -c "cd $(PATH_PREFIX)/delivery-robot/; pipenv run central/central.py config.ini"
-
-run-fleet:
-	cd $(PATH_PREFIX)/delivery-robot/; pipenv run fleet/fleet.py config.ini
-
-run-fleet-screen:
-	screen -dmS fleet bash -c "cd $(PATH_PREFIX)/delivery-robot/; pipenv run fleet/fleet.py config.ini"
-
-run-hmi:
-	cd $(PATH_PREFIX)/delivery-robot/; pipenv run hmi/hmi.py config.ini
-
-run-hmi-screen:
-	screen -dmS hmi bash -c "cd $(PATH_PREFIX)/delivery-robot/; pipenv run hmi/hmi.py config.ini"
-
-run-motion:
-	cd $(PATH_PREFIX)/delivery-robot/; pipenv run motion/motion.py config.ini
-
-run-motion-screen:
-	screen -dmS motion bash -c "cd $(PATH_PREFIX)/delivery-robot/; pipenv run motion/motion.py config.ini"
-
-run-sensors:
-	cd $(PATH_PREFIX)/delivery-robot/; pipenv run sensors/sensors.py config.ini
-
-run-sensors-screen:
-	screen -dmS sensors bash -c "cd $(PATH_PREFIX)/delivery-robot/; pipenv run sensors/sensors.py config.ini"
-
-test:
-	pytest -sv
+test: check_broker
+	pipenv run pytest -sv

@@ -25,7 +25,7 @@ def ordering():
         communication_details = {
             "id": req_id,
             "operation": "ordering",
-            "deliver_to": "central",
+            "deliver_to": "crypto",
             "source": "",
             #"pincode": sha256(content['pincode']).hexdigest(),
             "pincode": content['pincode'],
@@ -38,7 +38,7 @@ def ordering():
         error_message = f"malformed request {request.data}"
         print(error_message)
         return error_message, 400
-    return jsonify({"operation": "ordering requested", "id": req_id})
+    return jsonify({"operation": "ordering requested", "id": req_id}),200
 
 def start_rest(requests_queue):
     global _requests_queue 

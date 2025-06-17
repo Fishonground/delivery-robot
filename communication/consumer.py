@@ -24,16 +24,10 @@ def handle_event(id, details_str):
             if details['confirmation']:
                 response = request.post('https://localhost:6004/confirmation', json={'status':'successfull'})
                 print(f"[communication] event {id}, server answered {response}")
-                # if response.status_code != 200:
-                #     print(f"[error] event {id}, can't connect with fleet")
-                # print(f"[communication] event {id}, delivering confirmed by Central")
             else: print(f"[communication] event {id}, robot wasn't start his way!!!!!!")
         elif details['operation'] == 'ready':
             response = request.post('https://localhost:6004/ending', json={'status':'successfull'})
             print(f"[communication] event {id}, server answered {response}")
-            #if response.status_code != 200:
-            #        print(f"[error] event {id}, can't connect with fleet")
-            #print(f"[communication] event {id}, robot has been planted")
             
         else:
             print(f"[warning] unknown operation!\n{details}")                

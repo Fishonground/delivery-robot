@@ -24,15 +24,6 @@ def close_lock(id, details, was):
         else:
             time.sleep(1)
 
-
-def cleanup_extra_fields(details):
-    # remove the blob content from the message payload before sending
-    #del details['blob']
-    # also remove digest details as it will not be further used
-    #del details['digest_alg']
-    #del details['digest']
-    pass
-
 def handle_event(id, details_str):
     details = json.loads(details_str)
     print(f"[info] handling event {id}, {details['source']}->{details['deliver_to']}: {details['operation']}")
@@ -42,7 +33,7 @@ def handle_event(id, details_str):
             details['deliver_to'] = 'central'
             details['operation'] = 'lock_opening'
             delivery_required = True
-            was = time.time();
+            was = time.time()
             print(f"[lock_opening] event {id}, {was}")
             threading.Thread(target=lambda: close_lock(id, details, was)).start()
         else:
