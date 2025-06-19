@@ -17,8 +17,28 @@ def check_operation(id, details):
             authorized = True
             ordering = True
 
-
-    if src == 'central' and dst == 'communication' \
+    if src == 'communication' and dst == 'crypto' \
+        and operation == 'ordering':
+        authorized = True
+    if src == 'crypto' and dst == 'central' \
+        and operation == 'ordering':
+        authorized = True
+    if src == 'gnss' and dst == 'complex' \
+        and operation == 'set_gnss_coords':
+        authorized = True
+    if src == 'crypto' and dst == 'communication' \
+        and operation == 'confirmation':
+        authorized = True
+    if src == 'crypto' and dst == 'communication' \
+        and operation == 'ready':
+        authorized = True
+    if src == 'internal' and dst == 'complex' \
+        and operation == 'set_internal_coords':
+        authorized = True
+    if src == 'complex' and dst == 'central' \
+        and operation == 'set_coords':
+        authorized = True
+    if src == 'central' and dst == 'crypto' \
         and operation == 'confirmation':
         authorized = True    
     if src == 'central' and dst == 'positioning' \
@@ -32,7 +52,6 @@ def check_operation(id, details):
         authorized = True    
     if src == 'motion' and dst == 'positioning' \
         and operation == 'motion_start':
-        #and details['verified'] is True:
         authorized = True    
     if src == 'motion' and dst == 'positioning' \
         and operation == 'stop':
@@ -44,17 +63,19 @@ def check_operation(id, details):
         and operation == 'pincoding':
         authorized = True    
     if src == 'central' and dst == 'sensors' \
+        and operation == 'lock_closing':
+        authorized = True
+    if src == 'central' and dst == 'sensors' \
         and operation == 'lock_opening':
         authorized = True
-#     if src == 'sensors' and dst == 'central' \
-#         and operation == 'lock_opening':
-#         authorized = True
+    if  src == 'sensors' and dst == 'central'\
+        and operation == 'lock_opening':
+        authorized = True
     if  src == 'sensors' and dst == 'central'\
         and operation == 'lock_closing':
         authorized = True
-    if  src == 'central' and dst == 'communication'\
+    if  src == 'central' and dst == 'crypto'\
         and operation == 'ready':
         authorized = True
         ordering = False
-
     return authorized

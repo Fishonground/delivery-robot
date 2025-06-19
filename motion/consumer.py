@@ -70,16 +70,6 @@ def handle_event(id, details_str):
             delivery_required = True
         elif details['operation'] == 'stop':
             print("How did we get here?")
-            # global stopped
-            # stopped = True
-            # details['deliver_to'] = 'positioning'
-            # details['operation'] = 'stop'
-            # details['speed'] = 0
-            # now = time.time()
-            # details['distance'] = speed * (now - timestamp)
-            # details['time'] = now - timestamp
-            # details['direction'] = direction
-            # print(f"[motion] event {id}, stopped in {now}, went {details['distance']}")
             delivery_required = True
         else:
             print(f"[warning] unknown operation!\n{details}")                

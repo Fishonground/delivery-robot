@@ -1,4 +1,3 @@
-version: '3.4'
 
 services:
   zookeeper:
@@ -94,5 +93,37 @@ services:
     build:
       context: .
       dockerfile: ./Dockerfile.sensors
+    depends_on:
+      - broker
+
+  gnss:
+    image: gnss
+    build:
+      context: .
+      dockerfile: ./Dockerfile.gnss
+    depends_on:
+      - broker
+  
+  internal:
+    image: internal
+    build:
+      context: .
+      dockerfile: ./Dockerfile.internal
+    depends_on:
+      - broker
+  
+  complex:
+    image: complex
+    build:
+      context: .
+      dockerfile: ./Dockerfile.complex
+    depends_on:
+      - broker
+  
+  crypto:
+    image: crypto
+    build:
+      context: .
+      dockerfile: ./Dockerfile.crypto
     depends_on:
       - broker

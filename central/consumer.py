@@ -17,9 +17,14 @@ target_y = 0
 pincode_comp = False
 attempts = 3
 destination_point = False
-#details['operation'] == 'confirm'
-#details['operation'] == 'ending'
-
+epsilon = 1000
+def compare_coords(coords):
+    global target_x , target_y
+    if abs(coords[0] - target_x) < epsilon and abs(coords[1] - target_y) < epsilon:
+        if not destination_point:
+            print("Deviation wasn't detected")
+    else:
+        print("Deviation was Detected!!!!")
 
 
 def handle_event(id, details_str):
@@ -32,7 +37,6 @@ def handle_event(id, details_str):
     global attempts
     global destination_point
     try:
-        delivery_required = False
         if details['operation'] == 'ordering':
             attempts = 3
             PIN = details['pincode']
@@ -44,7 +48,7 @@ def handle_event(id, details_str):
             confirmation_details = {
             "id": id,
             "operation": "confirmation",
-            "deliver_to": "communication",
+            "deliver_to": "crypto",
             "source": "",
             "confirmation": True
             }
@@ -63,7 +67,7 @@ def handle_event(id, details_str):
             "y": details['y']
             }
             print(f"[central] event {id}, order is counting")
-            delivery_required = True
+            proceed_to_deliver(id, details)
 
 
         elif details['operation'] == 'count_direction':
@@ -81,7 +85,7 @@ def handle_event(id, details_str):
             "y": 0
             }
             print(f"[central] event {id}, robot started it's way")
-            delivery_required = True
+            proceed_to_deliver(id, details)
 
         elif details['operation'] == 'pincoding':
             if destination_point:
@@ -93,7 +97,7 @@ def handle_event(id, details_str):
                         pincode_comp = True
                         details['deliver_to'] = 'sensors'
                         details['operation'] = 'lock_opening'
-                        delivery_required = True
+                        proceed_to_deliver(id, details)
                         print(f"[central] event {id}, opening locks")
                     else: 
                         pincode_comp = False
@@ -113,7 +117,7 @@ def handle_event(id, details_str):
                         "y": 0
                     }
                     print(f"[central] event {id}, way back is counting")
-                    delivery_required = True
+                    proceed_to_deliver(id, details)
         
         elif details['operation'] == 'stop':
 
@@ -122,17 +126,13 @@ def handle_event(id, details_str):
                     "id": id,
                     "source": "",
                     "operation": "ready",
-                    "deliver_to": "communication"
+                    "deliver_to": "crypto"
                     }
-                delivery_required = True
+                proceed_to_deliver(id, details)
             else:
-            #if pincode_comp and (round(details['x'],-1) == target_x) and (details['y'] == target_y):
                 if (round(details['x'],-1) == round(target_x,-1)) and (round(details['y'],-1) == round(target_y,-1)):
                     destination_point = True
                     print(f"[central] event {id}, robot is in destination point, ready for PIN!")
-                    # details['deliver_to'] = 'sensors'
-                    # details['operation'] = 'lock_opening'
-                    # delivery_required = True
                 else:
                     print(f"[error] event {id}, robot is in not correct position! Expected {target_x} : {target_y} but received {details['x']} : {details['y']}")
         
@@ -150,18 +150,12 @@ def handle_event(id, details_str):
             "y": 0
             }
             print(f"[central] event {id}, way back is counting")
-            delivery_required = True
-            # details = {
-            #         "id": id,
-            #         "source": "",
-            #         "operation": "ready",
-            #         "deliver_to": "communication"
-            #         }
-            # delivery_required = True
+            proceed_to_deliver(id, details)
+        elif details['operation'] == "set_coords":
+            coords = details['coords']
+            compare_coords(coords)
         else:
             print(f"[warning] unknown operation!\n{details}")                
-        if delivery_required:
-            proceed_to_deliver(id, details)
     except Exception as e:
         print(f"[error] failed to handle request: {e}")
     
