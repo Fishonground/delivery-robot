@@ -37,9 +37,9 @@ delay60s:
 	sleep 60
 
 sys-packages:
-	#sudo apt install -y docker-compose
-	#sudo apt install python3-pip -y
-	#sudo pip install pipenv
+	sudo apt install -y docker-compose
+	sudo apt install python3-pip -y
+	sudo pip install pipenv
 
 broker:
 	docker-compose -f kafka/docker-compose.yaml up -d
